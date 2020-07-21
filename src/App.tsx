@@ -7,10 +7,15 @@ import * as encUtils from "enc-utils";
 import logo from "./logo.svg";
 import "./App.css";
 
-const baseUrl = "https://api.stg.deversifi.com/v1/trading";
+const baseUrl = "https://api.dev.deversifi.com/v1/trading";
 
-async function requestApi(url: string, params: any) {
-  const res = await axios.post(url, params);
+async function requestApi(path: string, params: any) {
+  const res = await axios.post(baseUrl + path, params, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
   return res.data;
 }
 
@@ -70,7 +75,7 @@ function App() {
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
-    const operatorSignature = await requestApi(`${baseUrl}/w/register`, {
+    const operatorSignature = await requestApi(`/w/register`, {
       starkKey:
         "6d840e6d0ecfcbcfa83c0f704439e16c69383d93f51427feb9a4f2d21fbe075",
       nonce: 1579783140.807,
