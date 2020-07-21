@@ -7,7 +7,7 @@ import * as encUtils from "enc-utils";
 import logo from "./logo.svg";
 import "./App.css";
 
-const baseUrl = "https://api.dev.deversifi.com/v1/trading";
+const baseUrl = "https://api.deversifi.dev/v1/trading";
 
 async function requestApi(path: string, params: any) {
   const res = await axios.post(baseUrl + path, params, {
@@ -75,14 +75,14 @@ function App() {
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
-    const operatorSignature = await requestApi(`/w/register`, {
+    const { deFiSignature } = await requestApi(`/w/register`, {
       starkKey:
         "6d840e6d0ecfcbcfa83c0f704439e16c69383d93f51427feb9a4f2d21fbe075",
       nonce: 1579783140.807,
       signature:
         "0x7e83e5fb1eb382d06906efa984a1cbf9c7a5bd301cbbbfa68d5d23624f9d301358329465291f5b72a9680687badf8f01a474193bd738add3d89e8d7e0e034b2b00",
     });
-    await starkProvider.register(operatorSignature);
+    await starkProvider.register(deFiSignature);
   }
   return (
     <div className="App">
