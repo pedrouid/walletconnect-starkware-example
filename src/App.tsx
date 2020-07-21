@@ -1,7 +1,6 @@
 import React from "react";
 import axios from "axios";
 import WalletConnect from "walletconnect";
-import * as encUtils from "enc-utils";
 
 // @ts-ignore
 import logo from "./logo.svg";
@@ -25,13 +24,6 @@ function App() {
   const [starkPublicKey, setStarkPublicKey] = React.useState<string>("");
   const [nonce, setNonce] = React.useState<string>("");
   const [signature, setSignature] = React.useState<string>("");
-
-  // function reset() {
-  //   console.log("reset");
-  //   setWC(undefined);
-  //   setStarkProvider(undefined);
-  //   setStarkPublicKey("");
-  // }
 
   async function connect() {
     if (!process.env.REACT_APP_INFURA_ID) {
@@ -64,10 +56,7 @@ function App() {
     const address = wc?.connector?.accounts[0];
     const msg = String(Date.now() / 1000);
     setNonce(msg);
-    const sig = await starkProvider.send("personal_sign", [
-      encUtils.utf8ToHex(msg),
-      address,
-    ]);
+    const sig = await starkProvider.send("personal_sign", [msg, address]);
     setSignature(sig);
   }
 
@@ -76,14 +65,13 @@ function App() {
       throw new Error("Stark Provider not enabled");
     }
     const { deFiSignature } = await requestApi(`/w/register`, {
-      starkKey:
-        "6d840e6d0ecfcbcfa83c0f704439e16c69383d93f51427feb9a4f2d21fbe075",
-      nonce: 1579783140.807,
-      signature:
-        "0x7e83e5fb1eb382d06906efa984a1cbf9c7a5bd301cbbbfa68d5d23624f9d301358329465291f5b72a9680687badf8f01a474193bd738add3d89e8d7e0e034b2b00",
+      starkKey: starkPublicKey.replace("0x", ""),
+      nonce: Number(nonce),
+      signature,
     });
     await starkProvider.register(deFiSignature);
   }
+
   return (
     <div className="App">
       <header className="App-header">
