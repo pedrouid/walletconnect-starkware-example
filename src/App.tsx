@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import WalletConnect from "walletconnect";
 import * as encUtils from "enc-utils";
 
@@ -9,15 +10,8 @@ import "./App.css";
 const baseUrl = "https://api.stg.deversifi.com/v1/trading";
 
 async function requestApi(url: string, params: any) {
-  const response = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify(params),
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-  return response.json();
+  const res = await axios.post(url, params);
+  return res.data;
 }
 
 function App() {
