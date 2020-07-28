@@ -1,12 +1,14 @@
 import React from "react";
 import axios from "axios";
 import WalletConnect from "walletconnect";
-
+import dvfConfig from './deversifiConfig';
 // @ts-ignore
 import logo from "./logo.svg";
 import "./App.css";
 
 const baseUrl = "https://api.deversifi.dev/v1/trading";
+
+let config = dvfConfig
 
 async function requestApi(path: string, params: any) {
   const res = await axios.post(baseUrl + path, params, {
@@ -24,11 +26,24 @@ function App() {
   const [starkPublicKey, setStarkPublicKey] = React.useState<string>("");
   const [nonce, setNonce] = React.useState<string>("");
   const [signature, setSignature] = React.useState<string>("");
+  const [registerTx, setRegisterTx] = React.useState<string>("");
+  const [transferSignature, setTransferSignature] = React.useState<string>("");
+  
+  
 
+  async function getUserConfig()  {
+    config = await requestApi(`/r/getUserConf`, {
+      nonce: Number(nonce),
+      signature,
+    });
+
+    console.log(config)
+  }
   async function connect() {
     if (!process.env.REACT_APP_INFURA_ID) {
       throw new Error("Missing Infura Id");
     }
+
     const wc = new WalletConnect();
     await wc.connect();
     setWC(wc);
@@ -38,15 +53,18 @@ function App() {
     const index = "0"; //(default)
 
     const starkProvider = await wc.getStarkwareProvider({
-      contractAddress: "0x47d2fAc88B14163DE64e4AFF3cA08069caa459d9",
+      contractAddress: config.DVF.starkExContractAddress,
     });
+   
     setStarkProvider(starkProvider);
     const starkPublicKey = await starkProvider.enable(
       layer,
       application,
       index
     );
+    
     setStarkPublicKey(starkPublicKey);
+    console.log(starkProvider)
   }
 
   async function signNonce() {
@@ -69,8 +87,64 @@ function App() {
       nonce: Number(nonce),
       signature,
     });
-    await starkProvider.register(deFiSignature);
+    const response  = await starkProvider.register(deFiSignature);
+    setRegisterTx(response)
+    console.log({response})
   }
+
+
+  async function transfer() {
+    // await getUserConfig()
+    const token = 'ETH'
+    if (!starkProvider) {
+      throw new Error('Stark Provider not enabled')
+    }
+
+    const tempVaultId = config.DVF.tempStarkVaultId
+    const starkVaultId = await requestApi(`/r/getVaultId`, {
+      token,
+      nonce: Number(nonce),
+      signature
+    })
+
+    const currency = config.tokenRegistry[token]
+    console.log({ currency })
+    const Tnonce = Math.ceil(Math.random() * 999999999)
+    const quantizedAmount = '100000000'
+    const expireTime = Math.floor(Date.now() / (1000 * 3600)) + 720
+
+    const to = {
+      starkPublicKey: starkPublicKey,
+      vaultId: String(starkVaultId)
+    }
+    // for testing, to be removed after WiP is done
+    const Token = {
+      type: 'ETH',
+      data: {
+        quantum: String(currency.quantization)
+      }
+    }
+
+    console.log(
+      to,
+      String(tempVaultId),
+      Token,
+      quantizedAmount,
+      String(Tnonce),
+      String(expireTime)
+    )
+
+    const transferSignature = await starkProvider.transfer(
+      to,
+      String(tempVaultId),
+      Token,
+      quantizedAmount,
+      String(nonce),
+      String(expireTime)
+    )
+    setTransferSignature(transferSignature)
+  }
+
 
   return (
     <div className="App">
@@ -84,6 +158,9 @@ function App() {
             <div>{`nonce: ${nonce}`}</div>
             <div>{`signature: ${signature}`}</div>
             <button onClick={register}>Register</button>
+            <div>{`register transaction: ${registerTx}`}</div>
+            <button onClick={transfer}>Sign Transfer Message</button>
+            <div>{`transfer signature: ${transferSignature}`}</div>
           </>
         ) : (
           <button onClick={connect}>Connect</button>
