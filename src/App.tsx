@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import WalletConnect from "walletconnect";
+import StarkwareProvider from "starkware-provider";
 
 // @ts-ignore
 import logo from "./logo.svg";
@@ -23,7 +24,7 @@ async function requestApi(path: string, params: any) {
 
 function App() {
   const [wc, setWC] = React.useState<WalletConnect>();
-  const [starkProvider, setStarkProvider] = React.useState<any>();
+  const [starkProvider, setStarkProvider] = React.useState<StarkwareProvider>();
   const [starkPublicKey, setStarkPublicKey] = React.useState<string>("");
   const [nonce, setNonce] = React.useState<string>("");
   const [signature, setSignature] = React.useState<string>("");
@@ -117,7 +118,7 @@ function App() {
     };
     // for testing, to be removed after WiP is done
     const Token = {
-      type: "ETH",
+      type: "ETH" as "ETH",
       data: {
         quantum: String(currency.quantization),
       },
