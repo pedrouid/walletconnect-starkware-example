@@ -74,7 +74,7 @@ export async function registerUser(
   nonce: string,
   signature: string
 ) {
-  const { data } = await api.post(`/r/getVaultId`, {
+  const { data } = await api.post(`/w/register`, {
     starkKey: starkPublicKey.replace("0x", ""),
     nonce: Number(nonce),
     signature,
