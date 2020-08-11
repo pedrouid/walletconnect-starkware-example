@@ -1,5 +1,7 @@
-export const dvfConfig = {
-  DVF: {
+import axios, { AxiosInstance } from "axios";
+
+export const config = {
+  exchange: {
     defaultFeeRate: 0.002,
     deversifiAddress: "0x9ab450355b4ab504cbc0e4de484781dac08e6a26",
     starkExContractAddress: "0xA9F9cC1189b9d6051b26467b29629787C671905d",
@@ -45,3 +47,41 @@ export const dvfConfig = {
     },
   },
 };
+
+const api: AxiosInstance = axios.create({
+  baseURL: "https://api.deversifi.dev/v1/trading",
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+});
+
+export async function getVaultId(
+  token: string,
+  nonce: string,
+  signature: string
+) {
+  const { data } = await api.post(`/r/getVaultId`, {
+    token,
+    nonce: Number(nonce),
+    signature,
+  });
+  return data;
+}
+
+export async function registerUser(
+  starkPublicKey: string,
+  nonce: string,
+  signature: string
+) {
+  const { data } = await api.post(`/r/getVaultId`, {
+    starkKey: starkPublicKey.replace("0x", ""),
+    nonce: Number(nonce),
+    signature,
+  });
+  return data;
+}
+
+export async function getConfig() {
+  return config;
+}

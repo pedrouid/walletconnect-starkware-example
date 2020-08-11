@@ -1,26 +1,11 @@
 import React from "react";
-import axios from "axios";
 import WalletConnect from "walletconnect";
 import StarkwareProvider from "starkware-provider";
 
 // @ts-ignore
 import logo from "./logo.svg";
-import { dvfConfig } from "./dvfConfig";
+import * as DVF from "./dvf";
 import "./App.css";
-
-const baseUrl = "https://api.deversifi.dev/v1/trading";
-
-let config = dvfConfig;
-
-async function requestApi(path: string, params: any) {
-  const res = await axios.post(baseUrl + path, params, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-  return res.data;
-}
 
 function App() {
   const [wc, setWC] = React.useState<WalletConnect>();
@@ -31,14 +16,6 @@ function App() {
   const [registerTx, setRegisterTx] = React.useState<string>("");
   const [transferSignature, setTransferSignature] = React.useState<string>("");
 
-  async function getUserConfig() {
-    config = await requestApi(`/r/getUserConf`, {
-      nonce: Number(nonce),
-      signature,
-    });
-
-    console.log(config);
-  }
   async function connect() {
     if (!process.env.REACT_APP_INFURA_ID) {
       throw new Error("Missing Infura Id");
@@ -53,7 +30,7 @@ function App() {
     const index = "0"; //(default)
 
     const starkProvider = await wc.getStarkwareProvider({
-      contractAddress: config.DVF.starkExContractAddress,
+      contractAddress: DVF.config.exchange.starkExContractAddress,
     });
 
     setStarkProvider(starkProvider);
@@ -82,31 +59,23 @@ function App() {
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
-    const { deFiSignature } = await requestApi(`/w/register`, {
-      starkKey: starkPublicKey.replace("0x", ""),
-      nonce: Number(nonce),
-      signature,
-    });
-    const response = await starkProvider.register(deFiSignature);
-    setRegisterTx(response);
-    console.log({ response });
+    const res = await DVF.registerUser(starkPublicKey, nonce, signature);
+    const registerTx = await starkProvider.register(res.deFiSignature);
+    setRegisterTx(registerTx);
+    console.log({ registerTx });
   }
 
   async function transfer() {
-    // await getUserConfig()
+    // await DVF.etUserConfig()
     const token = "ETH";
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
 
-    const tempVaultId = config.DVF.tempStarkVaultId;
-    const starkVaultId = await requestApi(`/r/getVaultId`, {
-      token,
-      nonce: Number(nonce),
-      signature,
-    });
+    const tempVaultId = DVF.config.exchange.tempStarkVaultId;
+    const starkVaultId = await DVF.getVaultId(token, nonce, signature);
 
-    const currency = config.tokenRegistry[token];
+    const currency = DVF.config.tokenRegistry[token];
     console.log({ currency });
     const Tnonce = Math.ceil(Math.random() * 999999999);
     const quantizedAmount = "100000000";
