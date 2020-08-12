@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 
 export const config = {
-  exchange: {
+  DVF: {
     defaultFeeRate: 0.002,
     deversifiAddress: "0x9ab450355b4ab504cbc0e4de484781dac08e6a26",
     starkExContractAddress: "0xA9F9cC1189b9d6051b26467b29629787C671905d",

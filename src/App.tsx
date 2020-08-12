@@ -30,7 +30,7 @@ function App() {
     const index = "0"; //(default)
 
     const starkProvider = await wc.getStarkwareProvider({
-      contractAddress: DVF.config.exchange.starkExContractAddress,
+      contractAddress: DVF.config.DVF.starkExContractAddress,
     });
 
     setStarkProvider(starkProvider);
@@ -49,7 +49,7 @@ function App() {
       throw new Error("Stark Provider not enabled");
     }
     const address = wc?.connector?.accounts[0];
-    const msg = String(Date.now() / 1000);
+    const msg = String(Date.now() / 1000).split(".")[0];
     setNonce(msg);
     const sig = await starkProvider.send("personal_sign", [msg, address]);
     setSignature(sig);
@@ -60,9 +60,11 @@ function App() {
       throw new Error("Stark Provider not enabled");
     }
     const res = await DVF.registerUser(starkPublicKey, nonce, signature);
-    const registerTx = await starkProvider.register(res.deFiSignature);
-    setRegisterTx(registerTx);
-    console.log({ registerTx });
+    if (!res.isRegistered) {
+      const registerTx = await starkProvider.register(res.deFiSignature);
+      setRegisterTx(registerTx);
+      console.log({ registerTx });
+    }
   }
 
   async function transfer() {
@@ -72,7 +74,7 @@ function App() {
       throw new Error("Stark Provider not enabled");
     }
 
-    const tempVaultId = DVF.config.exchange.tempStarkVaultId;
+    const tempVaultId = DVF.config.DVF.tempStarkVaultId;
     const starkVaultId = await DVF.getVaultId(token, nonce, signature);
 
     const currency = DVF.config.tokenRegistry[token];
