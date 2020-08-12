@@ -1,12 +1,14 @@
 import React from "react";
 import WalletConnect from "walletconnect";
-import StarkwareProvider from "starkware-provider";
+import StarkwareProvider, {deserializeSignature} from "starkware-provider";
 
 // @ts-ignore
 import logo from "./logo.svg";
 import * as DVF from "./dvf";
 import "./App.css";
 
+
+}
 function App() {
   const [wc, setWC] = React.useState<WalletConnect>();
   const [starkProvider, setStarkProvider] = React.useState<StarkwareProvider>();
@@ -113,6 +115,10 @@ function App() {
       String(expireTime)
     );
     setTransferSignature(transferSignature);
+    const sig = deserializeSignature(transferSignature)
+    console.log(sig.r)
+    console.log(sig.s)
+    console.log(sig.recoveryParam)
   }
 
   return (
