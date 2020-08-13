@@ -1,6 +1,6 @@
 import React from "react";
 import WalletConnect from "walletconnect";
-import StarkwareProvider, {deserializeSignature} from "starkware-provider";
+import StarkwareProvider, { deserializeSignature } from "starkware-provider";
 
 // @ts-ignore
 import logo from "./logo.svg";
@@ -68,7 +68,7 @@ function App() {
   }
 
   async function transfer() {
-    const amount = 0.1
+    const amount = 0.1;
     // await DVF.etUserConfig()
     const token = "ETH";
     if (!starkProvider) {
@@ -81,7 +81,8 @@ function App() {
     const currency = DVF.config.tokenRegistry[token];
     console.log({ currency });
     const Tnonce = Math.ceil(Math.random() * 999999999);
-    const quantizedAmount = amount * 10^currency.decimals/currency.quantization
+    const quantizedAmount =
+      (amount * 10) ^ (currency.decimals / currency.quantization);
     const expireTime = Math.floor(Date.now() / (1000 * 3600)) + 720;
 
     const to = {
@@ -114,10 +115,10 @@ function App() {
       String(expireTime)
     );
     setTransferSignature(transferSignature);
-    const sig = deserializeSignature(transferSignature)
-    console.log(sig.r)
-    console.log(sig.s)
-    console.log(sig.recoveryParam)
+    const sig = deserializeSignature(transferSignature);
+    console.log(sig.r.toString(16));
+    console.log(sig.s.toString(16));
+    console.log(sig.recoveryParam);
     // calling offchain deposit method
     const depositResponse = await DVF.deposit(
       token,
@@ -127,9 +128,9 @@ function App() {
       sig,
       starkVaultId,
       expireTime
-    )
+    );
 
-    console.log({depositResponse})
+    console.log({ depositResponse });
   }
 
   return (
