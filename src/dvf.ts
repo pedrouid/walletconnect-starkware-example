@@ -82,6 +82,29 @@ export async function registerUser(
   return data;
 }
 
+export async function deposit(
+  token: string,
+  amount: string,
+  nonce: number,
+  starkPublicKey: string, //convert to r and s
+  starkSignature: object,
+  starkVaultId: number,
+  expireTime: number
+) {
+
+  const { data } = await api.post(`/w/deposit`, {
+    token,
+    amount,
+    nonce,
+    starkPublicKey: {x: starkPublicKey.substr(2)},
+    starkSignature,
+    starkVaultId,
+    expireTime
+  });
+  return data;
+}
+
+
 export async function getConfig() {
   return config;
 }
