@@ -14,7 +14,11 @@ function App() {
   const [nonce, setNonce] = React.useState<string>("");
   const [signature, setSignature] = React.useState<string>("");
   const [registerTx, setRegisterTx] = React.useState<string>("");
+  const [transferParams, setTransferParams] = React.useState<any>();
+
   const [transferSignature, setTransferSignature] = React.useState<string>("");
+  const [depositTx, setDepositTx] = React.useState<string>("");
+  const [depositStatus, setDepositStatus] = React.useState<string>("");
 
   async function connect() {
     if (!process.env.REACT_APP_INFURA_ID) {
@@ -67,18 +71,14 @@ function App() {
     }
   }
 
-  async function transfer() {
+  async function formatTransfer() {
     const amount = 0.1;
-    // await DVF.etUserConfig()
-    const token = "ETH";
-    if (!starkProvider) {
-      throw new Error("Stark Provider not enabled");
-    }
+    const tokenType = "ETH" as "ETH";
 
     const tempVaultId = DVF.config.DVF.tempStarkVaultId;
-    const starkVaultId = await DVF.getVaultId(token, nonce, signature);
+    const starkVaultId = await DVF.getVaultId(tokenType, nonce, signature);
 
-    const currency = DVF.config.tokenRegistry[token];
+    const currency = DVF.config.tokenRegistry[tokenType];
     console.log({ currency });
     const Tnonce = Math.ceil(Math.random() * 999999999);
     const quantizedAmount =
@@ -90,47 +90,72 @@ function App() {
       vaultId: String(starkVaultId),
     };
     // for testing, to be removed after WiP is done
-    const Token = {
-      type: "ETH" as "ETH",
+    const token = {
+      type: tokenType,
       data: {
         quantum: String(currency.quantization),
       },
     };
 
-    console.log(
+    const transferParams = {
       to,
-      String(tempVaultId),
-      Token,
-      quantizedAmount,
-      String(Tnonce),
-      String(expireTime)
-    );
+      tempVaultId: String(tempVaultId),
+      token,
+      quantizedAmount: String(quantizedAmount),
+      nonce: String(Tnonce),
+      expireTime: String(expireTime),
+    };
+    console.log(transferParams);
+    setTransferParams(transferParams);
+  }
+
+  async function transfer() {
+    if (!starkProvider) {
+      throw new Error("Stark Provider not enabled");
+    }
 
     const transferSignature = await starkProvider.transfer(
-      to,
-      String(tempVaultId),
-      Token,
-      String(quantizedAmount),
-      String(nonce),
-      String(expireTime)
+      transferParams.to,
+      transferParams.tempVaultId,
+      transferParams.token,
+      transferParams.quantizedAmount,
+      transferParams.nonce,
+      transferParams.expireTime
     );
     setTransferSignature(transferSignature);
+  }
+
+  async function onchainDeposit() {
+    if (!starkProvider) {
+      throw new Error("Stark Provider not enabled");
+    }
+    const depositTx = await starkProvider.deposit(
+      transferParams.quantizedAmount,
+      transferParams.token,
+      transferParams.tempVaultId
+    );
+    setDepositTx(depositTx);
+    console.log({ depositTx });
+  }
+
+  async function offchainDeposit() {
     const sig = deserializeSignature(transferSignature);
     console.log(sig.r.toString(16));
     console.log(sig.s.toString(16));
     console.log(sig.recoveryParam);
     // calling offchain deposit method
     const depositResponse = await DVF.deposit(
-      token,
-      String(amount),
-      Tnonce,
+      transferParams.token,
+      transferParams.amount,
+      transferParams.nonce,
       starkPublicKey,
       sig,
-      starkVaultId,
-      expireTime
+      transferParams.to.vaultId,
+      transferParams.expireTime
     );
 
     console.log({ depositResponse });
+    setDepositStatus(depositResponse?.status || "");
   }
 
   return (
@@ -146,8 +171,14 @@ function App() {
             <div>{`signature: ${signature}`}</div>
             <button onClick={register}>Register</button>
             <div>{`register transaction: ${registerTx}`}</div>
-            <button onClick={transfer}>Sign Transfer Message</button>
+            <button onClick={formatTransfer}>Format Transfer</button>
+            <div>{`transfer params set: ${!!transferParams}`}</div>
+            <button onClick={transfer}>Sign Transfer</button>
             <div>{`transfer signature: ${transferSignature}`}</div>
+            <button onClick={onchainDeposit}>OnChain Deposit</button>
+            <div>{`deposit transaction: ${depositTx}`}</div>
+            <button onClick={offchainDeposit}>OffChain Deposit</button>
+            <div>{`deposit status: ${depositStatus}`}</div>
           </>
         ) : (
           <button onClick={connect}>Connect</button>

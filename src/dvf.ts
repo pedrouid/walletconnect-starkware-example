@@ -91,19 +91,17 @@ export async function deposit(
   starkVaultId: number,
   expireTime: number
 ) {
-
   const { data } = await api.post(`/w/deposit`, {
     token,
     amount,
     nonce,
-    starkPublicKey: {x: starkPublicKey.substr(2)},
+    starkPublicKey: { x: starkPublicKey.replace("0x", "") },
     starkSignature,
     starkVaultId,
-    expireTime
+    expireTime,
   });
   return data;
 }
-
 
 export async function getConfig() {
   return config;
