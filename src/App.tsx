@@ -1,6 +1,7 @@
 import React from "react";
 import WalletConnect from "walletconnect";
 import StarkwareProvider, { deserializeSignature } from "starkware-provider";
+import { MethodParams } from "starkware-types";
 
 // @ts-ignore
 import logo from "./logo.svg";
@@ -14,7 +15,9 @@ function App() {
   const [nonce, setNonce] = React.useState<string>("");
   const [signature, setSignature] = React.useState<string>("");
   const [registerTx, setRegisterTx] = React.useState<string>("");
-  const [transferParams, setTransferParams] = React.useState<any>();
+  const [transferParams, setTransferParams] = React.useState<
+    MethodParams.StarkTransferParams
+  >();
 
   const [transferSignature, setTransferSignature] = React.useState<string>("");
   const [depositTx, setDepositTx] = React.useState<string>("");
@@ -45,7 +48,7 @@ function App() {
     );
 
     setStarkPublicKey(starkPublicKey);
-    console.log(starkProvider);
+    console.log({ starkProvider });
   }
 
   async function signNonce() {
@@ -83,11 +86,15 @@ function App() {
     const Tnonce = Math.ceil(Math.random() * 999999999);
     const quantizedAmount =
       (amount * 10) ^ (currency.decimals / currency.quantization);
-    const expireTime = Math.floor(Date.now() / (1000 * 3600)) + 720;
+    const expirationTimestamp = Math.floor(Date.now() / (1000 * 3600)) + 720;
 
     const to = {
       starkPublicKey: starkPublicKey,
       vaultId: String(starkVaultId),
+    };
+    const from = {
+      starkPublicKey: starkPublicKey,
+      vaultId: String(tempVaultId),
     };
     // for testing, to be removed after WiP is done
     const token = {
@@ -97,13 +104,13 @@ function App() {
       },
     };
 
-    const transferParams = {
+    const transferParams: MethodParams.StarkTransferParams = {
+      from,
       to,
-      tempVaultId: String(tempVaultId),
       token,
       quantizedAmount: String(quantizedAmount),
       nonce: String(Tnonce),
-      expireTime: String(expireTime),
+      expirationTimestamp: String(expirationTimestamp),
     };
     console.log(transferParams);
     setTransferParams(transferParams);
@@ -113,14 +120,17 @@ function App() {
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
+    if (!transferParams) {
+      throw new Error("Transfer params is undefined");
+    }
 
     const transferSignature = await starkProvider.transfer(
       transferParams.to,
-      transferParams.tempVaultId,
+      transferParams.from.vaultId,
       transferParams.token,
       transferParams.quantizedAmount,
       transferParams.nonce,
-      transferParams.expireTime
+      transferParams.expirationTimestamp
     );
     setTransferSignature(transferSignature);
   }
@@ -129,29 +139,38 @@ function App() {
     if (!starkProvider) {
       throw new Error("Stark Provider not enabled");
     }
+    if (!transferParams) {
+      throw new Error("Transfer params is undefined");
+    }
     const depositTx = await starkProvider.deposit(
       transferParams.quantizedAmount,
       transferParams.token,
-      transferParams.tempVaultId
+      transferParams.to.vaultId
     );
     setDepositTx(depositTx);
     console.log({ depositTx });
   }
 
   async function offchainDeposit() {
+    if (!transferParams) {
+      throw new Error("Transfer params is undefined");
+    }
     const sig = deserializeSignature(transferSignature);
-    console.log(sig.r.toString(16));
-    console.log(sig.s.toString(16));
-    console.log(sig.recoveryParam);
+    const starkSignature = {
+      r: sig.r.toString(16),
+      s: sig.s.toString(16),
+      recoveryParam: sig.recoveryParam as number,
+    };
+    console.log({ starkSignature });
     // calling offchain deposit method
     const depositResponse = await DVF.deposit(
-      transferParams.token,
-      transferParams.amount,
+      transferParams.token.type,
+      transferParams.quantizedAmount,
       transferParams.nonce,
       starkPublicKey,
-      sig,
+      starkSignature,
       transferParams.to.vaultId,
-      transferParams.expireTime
+      transferParams.expirationTimestamp
     );
 
     console.log({ depositResponse });
