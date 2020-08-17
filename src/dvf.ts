@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import * as starkwareCrypto from "starkware-crypto";
 
 export const config = {
   DVF: {
@@ -95,7 +96,10 @@ export async function deposit(
     token,
     amount,
     nonce: Number(nonce),
-    starkPublicKey: { x: starkPublicKey.replace("0x", "") },
+    starkPublicKey: {
+      x: starkwareCrypto.getXCoordinate(starkPublicKey),
+      y: starkwareCrypto.getYCoordinate(starkPublicKey),
+    },
     starkSignature,
     starkVaultId: Number(starkVaultId),
     expireTime: Number(expireTime),
