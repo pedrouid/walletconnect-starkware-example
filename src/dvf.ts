@@ -76,7 +76,7 @@ export async function registerUser(
   signature: string
 ) {
   const { data } = await api.post(`/w/register`, {
-    starkKey: starkPublicKey.replace("0x", ""),
+    starkKey: starkwareCrypto.getXCoordinate(starkPublicKey),
     nonce: Number(nonce),
     signature,
   });
@@ -87,7 +87,7 @@ export async function deposit(
   token: string,
   amount: string,
   nonce: string,
-  starkPublicKey: string, //convert to r and s
+  starkPublicKey: string,
   starkSignature: { r: string; s: string; recoveryParam: number },
   starkVaultId: string,
   expireTime: string
