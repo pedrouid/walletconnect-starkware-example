@@ -5,7 +5,7 @@ export const config = {
   DVF: {
     defaultFeeRate: 0.002,
     deversifiAddress: "0x9ab450355b4ab504cbc0e4de484781dac08e6a26",
-    starkExContractAddress: "0xA9F9cC1189b9d6051b26467b29629787C671905d",
+    starkExContractAddress: "0x238d3f5383e44656106c6171a146deed3a09d1a3",
     exchangeSymbols: ["ETH:USDT", "ZRX:USDT", "ZRX:ETH", "BTC:USDT", "ETH:BTC"],
     tempStarkVaultId: 1,
     minDepositUSDT: 1,
