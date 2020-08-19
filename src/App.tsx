@@ -85,7 +85,8 @@ function App() {
     console.log({ currency });
     const Tnonce = Math.ceil(Math.random() * 999999999);
     const quantizedAmount =
-      (amount * 10) ^ (currency.decimals / currency.quantization);
+      (amount * (10 ** currency.decimals) / currency.quantization);
+    console.log({amount, quantizedAmount})
     const expirationTimestamp = Math.floor(Date.now() / (1000 * 3600)) + 720;
 
     const to = {
@@ -132,6 +133,7 @@ function App() {
       transferParams.nonce,
       transferParams.expirationTimestamp
     );
+    console.log('transferSignature ', transferSignature)
     setTransferSignature(transferSignature);
   }
 
